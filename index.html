@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Just for you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Nunito:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1f2a44;
+    --butter: #f6d55c;
+    --sky: #8ec5e8;
+    --paper: #fbfaf7;
+    --line: #dfe6ee;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Nunito", system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  h1, h2 { font-family: "Bricolage Grotesque", system-ui, sans-serif; margin: 0; }
+  .screen { display: none; min-height: 100vh; padding: 32px 20px; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+  /* ---------- Password screen ---------- */
+  #gate { background: linear-gradient(160deg, var(--sky) 0%, var(--butter) 100%); }
+  .gate-box { background: var(--paper); padding: 36px 28px; border-radius: 20px; width: 100%; max-width: 380px; text-align: center; }
+  .gate-box h1 { font-size: 1.9rem; margin-bottom: 8px; }
+  .gate-box p { margin: 0 0 20px; }
+  input[type="password"] {
+    width: 100%; padding: 14px; font: inherit; font-size: 1.05rem;
+    border: 2px solid var(--line); border-radius: 12px; margin-bottom: 12px;
+  }
+  input[type="password"]:focus { outline: 3px solid var(--sky); border-color: var(--ink); }
+  button {
+    font: inherit; font-weight: 600; cursor: pointer;
+    background: var(--ink); color: #fff; border: 0; border-radius: 12px; padding: 14px 20px;
+  }
+  button:hover { background: #33416a; }
+  button:focus-visible { outline: 3px solid var(--butter); outline-offset: 2px; }
+  #gate-error { color: #b3261e; min-height: 1.4em; margin: 10px 0 0; }
+
+  /* ---------- Dashboard ---------- */
+  #dashboard { justify-content: flex-start; }
+  .dash { width: 100%; max-width: 640px; }
+  .dash h2 { font-size: 2rem; margin-bottom: 6px; }
+  .dash > p { margin: 0 0 24px; }
+  .grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
+  @media (min-width: 560px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .tile {
+    text-align: left; background: #fff; color: var(--ink);
+    border: 2px solid var(--line); border-radius: 16px; padding: 20px;
+  }
+  .tile:hover { background: #fff; border-color: var(--ink); }
+  .tile strong { display: block; font-family: "Bricolage Grotesque", sans-serif; font-size: 1.25rem; margin-bottom: 4px; }
+  .tile span { font-weight: 400; font-size: 0.95rem; }
+  .tile.mood   { border-left: 10px solid var(--butter); }
+  .tile.convo  { border-left: 10px solid var(--sky); }
+  .tile.about  { border-left: 10px solid var(--butter); }
+  .tile.act    { border-left: 10px solid var(--sky); }
+  .tile.kamusta{ border-left: 10px solid var(--butter); grid-column: 1 / -1; }
+
+  /* ---------- Placeholder pages ---------- */
+  .page { width: 100%; max-width: 560px; }
+  .page h2 { margin-bottom: 10px; }
+  .back { background: transparent; color: var(--ink); border: 2px solid var(--ink); margin-top: 20px; }
+  .back:hover { background: var(--butter); }
+</style>
+</head>
+<body>
+
+<!-- Password screen -->
+<section id="gate" class="screen active">
+  <div class="gate-box">
+    <h1>Hi, you.</h1>
+    <p>Type our secret word to come in.</p>
+    <input type="password" id="pw" placeholder="Secret word" autocomplete="off">
+    <button id="enter" style="width:100%">Open</button>
+    <p id="gate-error" role="alert"></p>
+  </div>
+</section>
+
+<!-- Dashboard -->
+<section id="dashboard" class="screen">
+  <div class="dash">
+    <h2>Welcome in</h2>
+    <p>Pick anything. Everything here was made for you.</p>
+    <div class="grid">
+      <button class="tile mood"    data-go="mood"><strong>Mood Tracker</strong><span>Tell me how today feels.</span></button>
+      <button class="tile convo"   data-go="convo"><strong>Convo Stimulus</strong><span>Things we could talk about.</span></button>
+      <button class="tile about"   data-go="about"><strong>About me</strong><span>Hobbies, school, and dreams.</span></button>
+      <button class="tile act"     data-go="activities"><strong>Activities</strong><span>Cheer-ups and adventures.</span></button>
+      <button class="tile kamusta" data-go="kamusta"><strong>Kamusta Ako</strong><span>How I'm doing today.</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- Placeholder pages: we will replace each of these, one by one -->
+<section id="mood" class="screen"><div class="page"><h2>Mood Tracker</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
+<section id="convo" class="screen"><div class="page"><h2>Convo Stimulus</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
+<section id="about" class="screen"><div class="page"><h2>About me</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
+<section id="activities" class="screen"><div class="page"><h2>Activities</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
+<section id="kamusta" class="screen"><div class="page"><h2>Kamusta Ako</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
+
+<script>
+  // ------------------------------------------------------------
+  // 1) YOUR PASSWORD
+  // This long code is a scrambled (hashed) version of the password.
+  // Right now the password is:  changeme
+  // To change it, see the steps in our chat, then paste the new code here.
+  // ------------------------------------------------------------
+  const PASSWORD_HASH = "057ba03d6c44104863dc7361fe4578965d1887360f90a0895882e58a6248fc86";
+
+  // Turns text into a scrambled code (SHA-256)
+  async function hashText(text) {
+    const bytes = new TextEncoder().encode(text.trim().toLowerCase());
+    const buffer = await crypto.subtle.digest("SHA-256", bytes);
+    return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  // Shows one screen and hides the others
+  function show(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    window.scrollTo(0, 0);
+  }
+
+  async function tryPassword() {
+    const typed = document.getElementById("pw").value;
+    const error = document.getElementById("gate-error");
+    if (await hashText(typed) === PASSWORD_HASH) {
+      error.textContent = "";
+      show("dashboard");
+    } else {
+      error.textContent = "Not quite. Try again?";
+    }
+  }
+
+  document.getElementById("enter").addEventListener("click", tryPassword);
+  document.getElementById("pw").addEventListener("keydown", e => { if (e.key === "Enter") tryPassword(); });
+
+  // Every button with a data-go attribute takes you to that screen
+  document.querySelectorAll("[data-go]").forEach(btn => {
+    btn.addEventListener("click", () => show(btn.dataset.go));
+  });
+</script>
+</body>
+</html>
