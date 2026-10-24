@@ -70,6 +70,21 @@
   .page h2 { margin-bottom: 10px; }
   .back { background: transparent; color: var(--ink); border: 2px solid var(--ink); margin-top: 20px; }
   .back:hover { background: var(--butter); }
+
+  /* ---------- Mood Tracker ---------- */
+  #mood { transition: background-color 0.3s; }
+  .mood-box { width: 100%; max-width: 480px; text-align: center; }
+  .mood-photo { width: 220px; height: 220px; border-radius: 50%; object-fit: cover; border: 6px solid var(--paper); background: var(--paper); }
+  .mood-emoji { font-size: 5rem; line-height: 220px; width: 220px; height: 220px; border-radius: 50%; background: var(--paper); margin: 0 auto; display: none; }
+  .mood-photo-wrap { margin: 18px 0; display: flex; justify-content: center; }
+  .mood-value { font-family: "Bricolage Grotesque", sans-serif; font-size: 3rem; margin: 0; }
+  input[type="range"] { width: 100%; margin: 14px 0 4px; accent-color: var(--ink); height: 32px; }
+  .range-labels { display: flex; justify-content: space-between; font-size: 0.95rem; }
+  textarea { width: 100%; font: inherit; padding: 12px; border: 2px solid var(--line); border-radius: 12px; margin: 16px 0 12px; resize: vertical; }
+  textarea:focus { outline: 3px solid var(--sky); border-color: var(--ink); }
+  .privacy { font-size: 0.9rem; margin: 0 0 14px; }
+  .mood-msg { background: var(--paper); border-radius: 16px; padding: 20px; font-size: 1.15rem; margin: 18px 0; }
+  .hidden { display: none !important; }
 </style>
 </head>
 <body>
@@ -101,21 +116,36 @@
 </section>
 
 <!-- Placeholder pages: we will replace each of these, one by one -->
-<section id="mood" class="screen"><div class="page"><h2>Mood Tracker</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
+<section id="mood" class="screen"><div class="mood-box">
+  <h2>How are you feeling today?</h2>
+  <div class="mood-photo-wrap">
+    <img id="mood-photo" class="mood-photo" alt="Me, matching your mood" src="photos/okay.jpg">
+    <div id="mood-emoji" class="mood-emoji" aria-hidden="true">🙂</div>
+  </div>
+
+  <div id="mood-form">
+    <p class="mood-value" id="mood-number">5</p>
+    <input type="range" id="mood-slider" min="1" max="10" value="5" aria-label="Mood from 1 (sad) to 10 (happy)">
+    <div class="range-labels"><span>Sad</span><span>Happy</span></div>
+    <textarea id="mood-note" rows="2" placeholder="Anything you want to add? (optional)"></textarea>
+    <p class="privacy" id="mood-privacy"></p>
+    <button id="mood-submit" style="width:100%">Save today's mood</button>
+    <p id="mood-error" role="alert" style="color:#b3261e;min-height:1.4em"></p>
+  </div>
+
+  <div id="mood-result" class="hidden">
+    <div class="mood-msg" id="mood-message"></div>
+  </div>
+
+  <button class="back" data-go="dashboard">Back to dashboard</button>
+</div></section>
 <section id="convo" class="screen"><div class="page"><h2>Convo Stimulus</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
 <section id="about" class="screen"><div class="page"><h2>About me</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
 <section id="activities" class="screen"><div class="page"><h2>Activities</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
 <section id="kamusta" class="screen"><div class="page"><h2>Kamusta Ako</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
 
+<script src="config.js"></script>
 <script>
-  // ------------------------------------------------------------
-  // 1) YOUR PASSWORD
-  // This long code is a scrambled (hashed) version of the password.
-  // Right now the password is:  changeme
-  // To change it, see the steps in our chat, then paste the new code here.
-  // ------------------------------------------------------------
-  const PASSWORD_HASH = "0c469c307c2b923166eb877eec89527357a93811d34dc8318530bcf8ae1d9a72";
-
   // Turns text into a scrambled code (SHA-256)
   async function hashText(text) {
     const bytes = new TextEncoder().encode(text.trim().toLowerCase());
@@ -127,6 +157,7 @@
   function show(id) {
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
     document.getElementById(id).classList.add("active");
+    document.getElementById("mood").style.backgroundColor = id === "mood" ? backgroundFor(Number(slider.value)) : "";
     window.scrollTo(0, 0);
   }
 
@@ -148,6 +179,110 @@
   document.querySelectorAll("[data-go]").forEach(btn => {
     btn.addEventListener("click", () => show(btn.dataset.go));
   });
+
+  // ---------------- Mood Tracker ----------------
+  const slider = document.getElementById("mood-slider");
+
+  // Your photos, from saddest to happiest. Files go in the "photos" folder.
+  function photoFor(v) {
+    if (v <= 2) return { file: "photos/sad.jpg",    emoji: "😢" };
+    if (v <= 4) return { file: "photos/down.jpg",   emoji: "🙁" };
+    if (v <= 6) return { file: "photos/okay.jpg",   emoji: "🙂" };
+    if (v <= 8) return { file: "photos/happy.jpg",  emoji: "😄" };
+    return            { file: "photos/joyful.jpg", emoji: "🤩" };
+  }
+
+  // Background goes blue (sad) -> soft white (middle) -> yellow (happy)
+  function backgroundFor(v) {
+    const blue = [111, 168, 220], mid = [243, 239, 224], yellow = [246, 213, 92];
+    const t = (v - 1) / 9;
+    const [a, b, k] = t < 0.5 ? [blue, mid, t * 2] : [mid, yellow, (t - 0.5) * 2];
+    return "rgb(" + a.map((c, i) => Math.round(c + (b[i] - c) * k)).join(",") + ")";
+  }
+
+  function updateMoodLook() {
+    const v = Number(slider.value);
+    document.getElementById("mood-number").textContent = v;
+    document.getElementById("mood").style.backgroundColor = backgroundFor(v);
+    const p = photoFor(v);
+    const img = document.getElementById("mood-photo");
+    const emoji = document.getElementById("mood-emoji");
+    emoji.textContent = p.emoji;
+    img.onerror = () => { img.style.display = "none"; emoji.style.display = "block"; };
+    img.onload  = () => { img.style.display = "block"; emoji.style.display = "none"; };
+    img.src = p.file;
+  }
+
+  // Messages after she saves. Change these to sound like you!
+  const MOOD_MESSAGES = {
+    low:  ["Hey, I'm proud of you for showing up today, even a heavy one. I'm just a message away.",
+           "Rough days don't last, but you do. Want me to send a cheer-up your way? Check Activities."],
+    mid:  ["A steady day is still a good day. Thanks for checking in with me.",
+           "Not bad, not perfect, and that's okay. I hope the rest of your day is gentle."],
+    high: ["Look at you glowing! The day is lucky to have you in it.",
+           "A 9 or 10 deserves a celebration. I'm so happy for you."]
+  };
+
+  function messageFor(v) {
+    const group = v <= 4 ? "low" : v <= 7 ? "mid" : "high";
+    const list = MOOD_MESSAGES[group];
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+
+  function showMoodResult(v) {
+    document.getElementById("mood-form").classList.add("hidden");
+    document.getElementById("mood-result").classList.remove("hidden");
+    document.getElementById("mood-message").textContent = messageFor(v);
+    slider.value = v;
+    updateMoodLook();
+  }
+
+  // Runs whenever she opens the Mood Tracker
+  function openMood() {
+    document.getElementById("mood-privacy").textContent =
+      "Heads up: your answer goes to " + YOUR_NAME + ", who just wants to know how your day is going.";
+    const saved = JSON.parse(localStorage.getItem("moodToday") || "null");
+    if (saved && saved.day === todayKey()) {
+      showMoodResult(saved.value);   // already did it today
+    } else {
+      document.getElementById("mood-form").classList.remove("hidden");
+      document.getElementById("mood-result").classList.add("hidden");
+      updateMoodLook();
+    }
+  }
+
+  async function submitMood() {
+    const button = document.getElementById("mood-submit");
+    const error = document.getElementById("mood-error");
+    const v = Number(slider.value);
+    button.disabled = true;
+    button.textContent = "Saving...";
+    error.textContent = "";
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ type: "mood", mood: v, note: document.getElementById("mood-note").value })
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      localStorage.setItem("moodToday", JSON.stringify({ day: todayKey(), value: v }));
+      showMoodResult(v);
+    } catch (e) {
+      error.textContent = "That didn't save. Check your internet and try again.";
+    }
+    button.disabled = false;
+    button.textContent = "Save today's mood";
+  }
+
+  slider.addEventListener("input", updateMoodLook);
+  document.getElementById("mood-submit").addEventListener("click", submitMood);
+  document.querySelector('[data-go="mood"]').addEventListener("click", openMood);
 </script>
 </body>
 </html>
