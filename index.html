@@ -184,12 +184,14 @@
   const slider = document.getElementById("mood-slider");
 
   // Your photos, from saddest to happiest. Files go in the "photos" folder.
+  // The site accepts .jpg, .png, .jpeg or .webp automatically.
+  const PHOTO_TYPES = ["jpg", "png", "jpeg", "webp"];
   function photoFor(v) {
-    if (v <= 2) return { file: "photos/sad.jpg",    emoji: "😢" };
-    if (v <= 4) return { file: "photos/down.jpg",   emoji: "🙁" };
-    if (v <= 6) return { file: "photos/okay.jpg",   emoji: "🙂" };
-    if (v <= 8) return { file: "photos/happy.jpg",  emoji: "😄" };
-    return            { file: "photos/joyful.jpg", emoji: "🤩" };
+    if (v <= 2) return { base: "photos/sad",    emoji: "😢" };
+    if (v <= 4) return { base: "photos/down",   emoji: "🙁" };
+    if (v <= 6) return { base: "photos/okay",   emoji: "🙂" };
+    if (v <= 8) return { base: "photos/happy",  emoji: "😄" };
+    return            { base: "photos/joyful", emoji: "🤩" };
   }
 
   // Background goes blue (sad) -> soft white (middle) -> yellow (happy)
@@ -200,33 +202,143 @@
     return "rgb(" + a.map((c, i) => Math.round(c + (b[i] - c) * k)).join(",") + ")";
   }
 
+  let currentBase = "";
+  let photoRun = 0;
+  const workingType = {};   // remembers which file type worked for each photo
+
+  function loadPhoto(base, emojiChar) {
+    const img = document.getElementById("mood-photo");
+    const emoji = document.getElementById("mood-emoji");
+    emoji.textContent = emojiChar;
+    if (base === currentBase) return;      // same photo as before, nothing to do
+    currentBase = base;
+    const run = ++photoRun;
+    let i = 0;
+    const types = workingType[base] ? [workingType[base]] : PHOTO_TYPES;
+    function tryNext() {
+      if (run !== photoRun) return;        // she moved the slider again, ignore
+      if (i >= types.length) { img.style.display = "none"; emoji.style.display = "block"; return; }
+      img.src = base + "." + types[i++];
+    }
+    img.onload = () => {
+      if (run !== photoRun) return;
+      workingType[base] = img.src.split(".").pop();
+      img.style.display = "block"; emoji.style.display = "none";
+    };
+    img.onerror = tryNext;
+    tryNext();
+  }
+
   function updateMoodLook() {
     const v = Number(slider.value);
     document.getElementById("mood-number").textContent = v;
     document.getElementById("mood").style.backgroundColor = backgroundFor(v);
     const p = photoFor(v);
-    const img = document.getElementById("mood-photo");
-    const emoji = document.getElementById("mood-emoji");
-    emoji.textContent = p.emoji;
-    img.onerror = () => { img.style.display = "none"; emoji.style.display = "block"; };
-    img.onload  = () => { img.style.display = "block"; emoji.style.display = "none"; };
-    img.src = p.file;
+    loadPhoto(p.base, p.emoji);
   }
 
-  // Messages after she saves. Change these to sound like you!
+  // ------------------------------------------------------------
+  // MESSAGE BANK. Add or edit messages freely: just keep each one
+  // inside quotes and end every line with a comma.
+  // Messages are shuffled, and none repeats until she has seen them all.
+  // ------------------------------------------------------------
   const MOOD_MESSAGES = {
-    low:  ["Hey, I'm proud of you for showing up today, even a heavy one. I'm just a message away.",
-           "Rough days don't last, but you do. Want me to send a cheer-up your way? Check Activities."],
-    mid:  ["A steady day is still a good day. Thanks for checking in with me.",
-           "Not bad, not perfect, and that's okay. I hope the rest of your day is gentle."],
-    high: ["Look at you glowing! The day is lucky to have you in it.",
-           "A 9 or 10 deserves a celebration. I'm so happy for you."]
+    // mood 1-2
+    sad: [
+      "I want to give you a hug so bad, remember na ara lang ko diri :)",
+      "Pwede taka updan sa kasubo mo? Sadness is always manageable when shared with someone, tani ako tong someone mo.",
+      "I'll be praying for your happiness, there will always be a rainbow after the rain.",
+      "Nag hibi ka? Kapoy? Pwede taka updan mag hakwat sina nga mga problema?",
+      "I care for you, so does a lot of people. Tani bal'an mo na, ari lang ko diri.",
+      "Whatever happened today, you don't have to carry it alone. Ara lang ko diri, okay?",
+      "It's okay to not be okay today. Take your time, I'm not going anywhere.",
+      "Kapoy gid siguro subong, no? Rest anay. You've been strong for so long, madame.",
+      "If you want to rant, I'm all ears. If you want silence, I'll sit with you in it. Your call po.",
+      "Sending you the biggest virtual hug I can. Squeeze mo lang, hahah.",
+      "You don't have to explain your sadness. I'm just here to remind you that you matter.",
+      "This feeling is heavy, but it's not forever. And I'll be around for the whole walk.",
+      "Drink some water, take a deep breath, and message me if you want. I'm one text away.",
+      "Tomorrow is a new page, but tonight it's okay to just rest. Ara lang ko diri.",
+      "You are loved more than you know, and I'm one of the people who thinks so."
+    ],
+    // mood 3-4
+    down: [
+      "Wag kana ma-down please, spaghetti lang ang dapat pababa hahah here for you.",
+      "Chair up po, pangitai sang bangko dira kag i-itsa para masadyahan ka hahahah sending hugs.",
+      "Sad ka today? It's okay mag rest anay, I'll just be here if you need anything.",
+      "Ano tawag sa sisig nga wala itlog? Edi sis lang hahah. I know down ka now but I hope things will be better today or maybe tomorrow. Here for you po.",
+      "Down today? That's okay, even phones need to recharge. Rest anay, madame.",
+      "Why did the cookie go to the doctor? Because it felt crumbly. Same energy today? Feel better soon po hahah.",
+      "You don't have to be at your best today. Showing up is already a win.",
+      "Small steps lang today. A snack, some water, a little rest. I'm proud of you.",
+      "If today is a heavy one, I hope this message makes it a little lighter. Here for you po.",
+      "Bad day? It's just a chapter, not the whole book. Ara lang ko diri sa next page.",
+      "Wanna talk about it, or want me to distract you with random facts? Either one works hahah.",
+      "Be gentle with yourself today, as gentle as you'd be with a friend."
+    ],
+    // mood 5-6
+    okay: [
+      "Neutral lang today? Bal'an mo ano mas maka pa happy pagid? spending time with me hahahah one chat away lang ko ah hahah",
+      "Okay ka lang? Di kalipat magkaon on time and healthy, para mas maging better pagid day mo.",
+      "I hope you know how much I care for you, and I hope knowing this would make your day even better.",
+      "Let's make your \"okay\" day a little bit better? ano man? coffee tea or me? hahah here for you po",
+      "An okay day is a good blank canvas. Let's see if we can add a little color, ano?",
+      "Okay lang is okay. But if you want it to become great, I can send corny jokes hahah.",
+      "I hope your day has at least one small thing that made you smile. If not, consider this message that thing hahah.",
+      "Hydrate, stretch, and eat something yummy. That's how you upgrade an okay day po.",
+      "Neutral today? Plot twist could be coming, stay tuned madame hahah.",
+      "Thanks for checking in with me today. That already made my day better.",
+      "Okay day? Let's aim for \"pretty good\" by dinner. You got this."
+    ],
+    // mood 7-8
+    happy: [
+      "Nice! I'm happy that you are happy po, knowing you feel this way warms my heart.",
+      "My day just got a little bit brighter knowing that you are doing well.",
+      "Keep up the good work today madame, don't forget to rest and eat well. Here for you!",
+      "Gamay nalang gid maging the best na nang imo nga day, always know na ara lang ko diri para sa imo ha, bye",
+      "You being happy is my favorite news today po. Keep it going!",
+      "Yay! Good days look good on you, madame.",
+      "Whatever you did today, keep doing it. It's working hahah.",
+      "Happy ka? Then I'm happy too. Simple math hahah.",
+      "I hope something small and sweet made you smile today. You deserve all of them.",
+      "Proud of you po. Enjoy this feeling, you earned it.",
+      "Your good mood is contagious, and I caught it even from here hahah.",
+      "Treat yourself a little today, madame. Ice cream maybe? Hint hint hahah."
+    ],
+    // mood 9-10
+    joyful: [
+      "knock knock, who's there? happiness. Happiness who? It's you being happy, keep shining po madame",
+      "I'm really happy to know that you are happy! Keep shining!",
+      "Having the best day? I'll pray day like this would follow you for a very long time :)",
+      "I'll be there in your sad moments, and I'm also here for days like this! Glad to know na happy ka subong madame, I hope I am one of the reasons hahah.",
+      "A 9 or 10?! Someone call the news, breaking: madame is having a great day hahah.",
+      "This is the energy! Hold on to it as long as you can, and share some with me please hahah.",
+      "I'm so happy for you I could do a little dance right now. Don't ask for proof hahah.",
+      "You deserve days like this and many more. Keep glowing po!",
+      "Joyful day alert! Celebrate it however you want, and tell me all about it later.",
+      "Your happiness makes my whole day. Thank you for sharing it with me.",
+      "If happiness had a face today, it would be yours, madame.",
+      "Let's save this day in our memory. A really good one."
+    ]
   };
 
+  // Picks a message from the right group without repeating until all are used
   function messageFor(v) {
-    const group = v <= 4 ? "low" : v <= 7 ? "mid" : "high";
+    const group = v <= 2 ? "sad" : v <= 4 ? "down" : v <= 6 ? "okay" : v <= 8 ? "happy" : "joyful";
     const list = MOOD_MESSAGES[group];
-    return list[Math.floor(Math.random() * list.length)];
+    let bag = [];
+    try { bag = JSON.parse(localStorage.getItem("bag_" + group) || "[]"); } catch (e) {}
+    bag = bag.filter(i => i < list.length);
+    if (bag.length === 0) {
+      bag = list.map((_, i) => i);
+      for (let i = bag.length - 1; i > 0; i--) {      // shuffle
+        const j = Math.floor(Math.random() * (i + 1));
+        [bag[i], bag[j]] = [bag[j], bag[i]];
+      }
+    }
+    const pick = bag.pop();
+    localStorage.setItem("bag_" + group, JSON.stringify(bag));
+    return list[pick];
   }
 
   function todayKey() {
@@ -234,10 +346,10 @@
     return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
   }
 
-  function showMoodResult(v) {
+  function showMoodResult(v, message) {
     document.getElementById("mood-form").classList.add("hidden");
     document.getElementById("mood-result").classList.remove("hidden");
-    document.getElementById("mood-message").textContent = messageFor(v);
+    document.getElementById("mood-message").textContent = message;
     slider.value = v;
     updateMoodLook();
   }
@@ -248,7 +360,7 @@
       "Heads up: your answer goes to " + YOUR_NAME + ", who just wants to know how your day is going.";
     const saved = JSON.parse(localStorage.getItem("moodToday") || "null");
     if (saved && saved.day === todayKey()) {
-      showMoodResult(saved.value);   // already did it today
+      showMoodResult(saved.value, saved.message);   // already did it today
     } else {
       document.getElementById("mood-form").classList.remove("hidden");
       document.getElementById("mood-result").classList.add("hidden");
@@ -271,8 +383,9 @@
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
-      localStorage.setItem("moodToday", JSON.stringify({ day: todayKey(), value: v }));
-      showMoodResult(v);
+      const message = messageFor(v);
+      localStorage.setItem("moodToday", JSON.stringify({ day: todayKey(), value: v, message: message }));
+      showMoodResult(v, message);
     } catch (e) {
       error.textContent = "That didn't save. Check your internet and try again.";
     }
