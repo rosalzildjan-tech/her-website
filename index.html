@@ -122,6 +122,23 @@
   .search-row input { margin-bottom: 8px; }
   .search-row button { margin: 6px 0 8px; white-space: nowrap; }
   #pin-status { font-size: 0.95rem; min-height: 1.4em; margin: 4px 0 14px; }
+
+  /* ---------- Kamusta Ako ---------- */
+  .k-label { font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; margin: 22px 0 4px; }
+  .k-feeling { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.9rem; line-height: 1.2; margin: 0; }
+  .hp-row { display: flex; justify-content: space-between; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; letter-spacing: 0.08em; margin: 22px 0 6px; }
+  .hp { position: relative; height: 36px; border: 4px solid var(--ink); border-radius: 10px; background: #fff; overflow: hidden; }
+  .hp-fill { height: 100%; width: 0; transition: width 1s ease-out, background-color 0.4s; }
+  .hp::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(90deg, transparent 0, transparent calc(10% - 2px), rgba(31,42,68,.3) calc(10% - 2px), rgba(31,42,68,.3) 10%); }
+  .hp-hint { margin: 8px 0 0; font-size: 0.98rem; }
+  .polaroid { background: #fff; padding: 12px 12px 14px; max-width: 340px; margin: 28px auto 20px; transform: rotate(-2deg); box-shadow: 0 8px 22px rgba(31,42,68,.18); }
+  .polaroid img, .polaroid iframe { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border: 0; background: #e9edf3; }
+  .polaroid .cap { text-align: center; margin: 12px 0 0; font-family: "Bricolage Grotesque", sans-serif; }
+  .note-card { background: #fff6cf; border-left: 6px solid var(--butter); border-radius: 8px; padding: 16px 18px; line-height: 1.65; margin: 20px 0; }
+  .affection { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .affection button { flex: 1; min-width: 140px; }
+  #k-status { margin: 10px 0 0; min-height: 1.4em; }
 </style>
 </head>
 <body>
@@ -350,7 +367,39 @@
   </div>
 </div></section>
 
-<section id="kamusta" class="screen"><div class="page"><h2>Kamusta Ako</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
+<section id="kamusta" class="screen read"><div class="page wide">
+  <h2>Kamusta Ako</h2>
+  <p id="k-loading">Checking in on me...</p>
+  <p id="k-error" class="hidden" role="alert"></p>
+
+  <div id="k-content" class="hidden">
+    <p class="k-label">Today I’m feeling</p>
+    <p class="k-feeling" id="k-feeling"></p>
+
+    <div class="hp-row"><span>ENERGY</span><span id="k-energy-text"></span></div>
+    <div class="hp" role="img" id="k-bar" aria-label="Energy bar"><div class="hp-fill" id="k-fill"></div></div>
+    <p class="hp-hint" id="k-hint"></p>
+
+    <div class="polaroid hidden" id="k-photo-wrap">
+      <div id="k-photo-slot"></div>
+      <p class="cap" id="k-date"></p>
+    </div>
+
+    <div class="note-card hidden" id="k-note"></div>
+
+    <p class="k-label">Send me something</p>
+    <div class="affection">
+      <button data-affection="hug">Send a hug 🤗</button>
+      <button data-affection="kiss">Send a kiss 😘</button>
+    </div>
+    <p id="k-status" role="status"></p>
+  </div>
+
+  <div class="btnrow">
+    <button class="back" data-go="activities">See activities</button>
+    <button class="back" data-go="dashboard">Back to dashboard</button>
+  </div>
+</div></section>
 
 <script src="config.js"></script>
 <script src="topics.js"></script>
@@ -988,6 +1037,96 @@
   document.getElementById("act-submit").addEventListener("click", submitActivity);
   document.getElementById("place-go").addEventListener("click", searchPlace);
   document.getElementById("place-search").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); searchPlace(); } });
+
+  // ---------------- Kamusta Ako ----------------
+  // Pulls the LAST ROW of the "Kamusta" tab in the Google Sheet:
+  // Date | Feeling | Energy (1-100) | Photo (Drive link) | Message
+  function driveId(url) {
+    const m = url.match(/\/d\/([\w-]+)/) || url.match(/[?&]id=([\w-]+)/);
+    return m ? m[1] : null;
+  }
+
+  function showKamustaPhoto(link) {
+    const wrap = document.getElementById("k-photo-wrap");
+    const slot = document.getElementById("k-photo-slot");
+    slot.innerHTML = "";
+    if (!link) { wrap.classList.add("hidden"); return; }
+    const id = driveId(link);
+    const img = document.createElement("img");
+    img.alt = "A photo from my day";
+    img.src = id ? "https://drive.google.com/thumbnail?id=" + id + "&sz=w1000" : link;
+    img.onerror = () => {            // not a picture (maybe a video)? try the Drive preview instead
+      if (!id) { wrap.classList.add("hidden"); return; }
+      slot.innerHTML = "";
+      const frame = document.createElement("iframe");
+      frame.src = "https://drive.google.com/file/d/" + id + "/preview";
+      frame.allow = "autoplay; fullscreen";
+      frame.title = "From my day";
+      slot.appendChild(frame);
+    };
+    slot.appendChild(img);
+    wrap.classList.remove("hidden");
+  }
+
+  function showKamusta(d) {
+    document.getElementById("k-feeling").textContent = d.feeling || "...";
+    let energy = parseInt(String(d.energy).replace(/[^\d]/g, ""), 10);
+    if (isNaN(energy)) energy = 0;
+    energy = Math.max(0, Math.min(100, energy));
+    document.getElementById("k-energy-text").textContent = energy + " / 100";
+    document.getElementById("k-bar").setAttribute("aria-label", "Energy " + energy + " out of 100");
+    const fill = document.getElementById("k-fill");
+    fill.style.backgroundColor = energy <= 30 ? "#e5604d" : energy <= 60 ? "#f6d55c" : "#6cc070";
+    fill.style.width = "0%";
+    setTimeout(() => { fill.style.width = energy + "%"; }, 80);
+    document.getElementById("k-hint").textContent =
+      energy >= 70 ? "Full of energy. I’m up for an adventure!" :
+      energy >= 40 ? "Doing alright. Something chill would be nice." :
+                     "Low battery today. A cheer-up would go a long way.";
+    document.getElementById("k-date").textContent = d.date || "";
+    showKamustaPhoto((d.photo || "").trim());
+    const note = document.getElementById("k-note");
+    if ((d.message || "").trim()) { note.textContent = d.message; note.classList.remove("hidden"); }
+    else { note.classList.add("hidden"); }
+  }
+
+  async function loadKamusta() {
+    const loading = document.getElementById("k-loading");
+    const err = document.getElementById("k-error");
+    const content = document.getElementById("k-content");
+    loading.classList.remove("hidden"); err.classList.add("hidden"); content.classList.add("hidden");
+    try {
+      const res = await fetch(SCRIPT_URL + "?t=" + Date.now());
+      const d = await res.json();
+      if (!d.ok) throw new Error(d.error || "empty");
+      showKamusta(d);
+      loading.classList.add("hidden"); content.classList.remove("hidden");
+    } catch (e) {
+      loading.classList.add("hidden");
+      err.textContent = "I haven’t posted an update yet, or it couldn’t load. Try again in a bit.";
+      err.classList.remove("hidden");
+    }
+  }
+  document.querySelector('[data-go="kamusta"]').addEventListener("click", loadKamusta);
+
+  // Hug and kiss buttons (each one emails me; 30-second pause so it can't be spammed by accident)
+  document.querySelectorAll("[data-affection]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const kind = btn.dataset.affection;
+      const status = document.getElementById("k-status");
+      btn.disabled = true;
+      try {
+        const res = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ type: kind }) });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        status.textContent = "Sent! " + YOUR_NAME + " just got your " + kind + ". 💛";
+        setTimeout(() => { btn.disabled = false; }, 30000);
+      } catch (e) {
+        status.textContent = "That didn’t send. Try again?";
+        btn.disabled = false;
+      }
+    });
+  });
 </script>
 </body>
 </html>
