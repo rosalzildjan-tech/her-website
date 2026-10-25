@@ -85,6 +85,15 @@
   .privacy { font-size: 0.9rem; margin: 0 0 14px; }
   .mood-msg { background: var(--paper); border-radius: 16px; padding: 20px; font-size: 1.15rem; margin: 18px 0; }
   .hidden { display: none !important; }
+
+  /* ---------- About me ---------- */
+  .screen.read.active { justify-content: flex-start; }
+  .page.wide { max-width: 640px; }
+  .page.wide p { line-height: 1.7; font-size: 1.05rem; }
+  .page h3 { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.2rem; margin: 26px 0 8px; }
+  .media iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 12px; margin: 6px 0 14px; background: #e9edf3; display: block; }
+  .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+  .btnrow .back { margin-top: 0; }
 </style>
 </head>
 <body>
@@ -140,7 +149,61 @@
   <button class="back" data-go="dashboard">Back to dashboard</button>
 </div></section>
 <section id="convo" class="screen"><div class="page"><h2>Convo Stimulus</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
-<section id="about" class="screen"><div class="page"><h2>About me</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
+<!-- About me: hub with three categories -->
+<section id="about" class="screen"><div class="page">
+  <h2>About me</h2>
+  <p>A little more of who I am. Pick a side of me to explore.</p>
+  <div class="grid" style="margin-top:18px">
+    <button class="tile about"  data-go="about-hobbies"><strong>Hobbies</strong><span>Music, running, and learning.</span></button>
+    <button class="tile convo"  data-go="about-education"><strong>Educational background</strong><span>My school story so far.</span></button>
+    <button class="tile about"  data-go="about-aspirations" style="grid-column:1 / -1"><strong>Aspirations</strong><span>Goals, plans, and who I want to be.</span></button>
+  </div>
+  <button class="back" data-go="dashboard">Back to dashboard</button>
+</div></section>
+
+<!-- About me: Hobbies -->
+<section id="about-hobbies" class="screen read"><div class="page wide">
+  <h2>Hobbies</h2>
+  <p>I mean, I like to do a lot of things. One of the hobbies that I like to do is music. Seems vague enough, but I like doing things that revolve around music, from composing my own music to collecting vinyl records. Ever since I was in elementary school, I have always liked creating songs, even before I learned how to play any instrument. I also have to admit that I have a “love-hate” relationship with music. From an early age, it caused me trauma, but I eventually grew to like it (let me tell you in detail next time; this may be too deep of a conversation to write down haha).</p>
+  <p>Anyways, I think I have written almost a hundred songs and tried to produce some of them, but I have always had a habit of not finishing my compositions. It may be because I would like them to remain as ideas and potential (deep hahah). I also started collecting vinyl records in 2024. I don’t have a lot in my collection, but enough to call myself a collector. I plan to expand it, but this collecting hobby is expensive haha. Another hobby related to music is driving around with an awesome playlist. Seems really cool.</p>
+  <h3>Pictures and videos: music</h3>
+  <div class="media" data-media="music"></div>
+  <p>Another hobby I like is engaging in physical activities, which include running and hiking. This hobby only started recently, sometime after I graduated from my undergraduate studies and passed my board exam. I wouldn’t say I’m good or the best at running, but it keeps me active and healthy, and it helps when I overthink things too much.</p>
+  <h3>Pictures and videos: running and hiking</h3>
+  <div class="media" data-media="active"></div>
+  <p>I would say there are a lot more hobbies that I have, but they change from time to time. One thing is for certain, though: I like to learn things. I would say I’m a lifelong learner. I tend to challenge myself to evolve and become better. Just like doing this website, I liked it because I learned a lot. I also listen to podcasts that teach me about different topics like geopolitics, economics, and tech (I know, boring, right? Haha). I guess that’s about me and the hobbies I like doing.</p>
+  <div class="btnrow">
+    <button class="back" data-go="about">Back to About me</button>
+    <button class="back" data-go="dashboard">Dashboard</button>
+  </div>
+</div></section>
+
+<!-- About me: Educational background -->
+<section id="about-education" class="screen read"><div class="page wide">
+  <h2>Educational background</h2>
+  <p>I think my educational background is mediocre. I worked hard and didn’t flunk any classes, but I would say I wasn’t the best at it. Some information about me: my strand was STEM, and my college course was BS in Psychology. Why Psychology? I don’t know either, but I guess when I was in senior high school, I struggled with my mental health a bit, and I guess psychology was one of the ways I could figure things out and help myself. Later on, I grew to like it because it’s a helping profession.</p>
+  <p>Currently, I’m working on my master’s degree to become a psychologist. Hopefully, I can find enough motivation to finish my thesis.</p>
+  <h3>Pictures and videos: my studies</h3>
+  <div class="media" data-media="school"></div>
+  <div class="btnrow">
+    <button class="back" data-go="about">Back to About me</button>
+    <button class="back" data-go="dashboard">Dashboard</button>
+  </div>
+</div></section>
+
+<!-- About me: Aspirations -->
+<section id="about-aspirations" class="screen read"><div class="page wide">
+  <h2>Aspirations</h2>
+  <p>I have always lived by one motto: “Exist.” It’s too hard to explain, but what I aspire to be is significant. This may seem narcissistic, but I hope not. I don’t aspire to have prestige; I want my existence to matter. I don’t want to walk this earth living just like any other guy. I want to live a significant life by doing things that matter.</p>
+  <p>That’s why I strive to finish my education and become a psychologist. I think that mental health is a noble pursuit and that it impacts people deeply. I also aspire to introduce systemic change that benefits people, especially those who experience abuse.</p>
+  <p>A year ago, I started Project Alamat, an advocacy project that helps address the literacy problem in our country. I want to help children get a good education and equip themselves to become great professionals in the future.</p>
+  <p>I know I’m idealistic, and it has its benefits as well as its downsides. But I have always wanted to live a life that is about more than just myself, and I don’t think I’ll change this mentality.</p>
+  <div class="btnrow">
+    <button class="back" data-go="about">Back to About me</button>
+    <button class="back" data-go="dashboard">Dashboard</button>
+  </div>
+</div></section>
+
 <section id="activities" class="screen"><div class="page"><h2>Activities</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
 <section id="kamusta" class="screen"><div class="page"><h2>Kamusta Ako</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
 
@@ -396,6 +459,26 @@
   slider.addEventListener("input", updateMoodLook);
   document.getElementById("mood-submit").addEventListener("click", submitMood);
   document.querySelector('[data-go="mood"]').addEventListener("click", openMood);
+
+  // ---------------- About me: photos and videos ----------------
+  // Each long code is the ID of a Google Drive file (the part between /d/ and /view in the link).
+  // To add one, paste its ID into the right list, in quotes, followed by a comma.
+  const ABOUT_MEDIA = {
+    music:  ["12FBUfIczg3tHNZMU0gOedeHPdqDaN6PW", "1MBgUqVGyumOlUbcg4T2eUExc-AN2tANW"],
+    active: ["16CD0TVqXeJ-P9_ei5fUGbm_4e7SQzfT4", "1LyKwy-QTxmwwbefeDqky5XOQgQ2nwqDD"],
+    school: ["1b3BfR1Z6f5UzBpV_ZNxvNpek4AWtJdHr", "1y6GfWdwjqtHBYR0G-iz5XWGSGyxvhIAn"]
+  };
+  document.querySelectorAll("[data-media]").forEach(box => {
+    (ABOUT_MEDIA[box.dataset.media] || []).forEach(id => {
+      const frame = document.createElement("iframe");
+      frame.src = "https://drive.google.com/file/d/" + id + "/preview";
+      frame.loading = "lazy";
+      frame.allow = "autoplay; fullscreen";
+      frame.allowFullscreen = true;
+      frame.title = "Photo or video";
+      box.appendChild(frame);
+    });
+  });
 </script>
 </body>
 </html>
