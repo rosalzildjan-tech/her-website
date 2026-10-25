@@ -6,6 +6,7 @@
 <title>Just for you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Nunito:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -109,6 +110,18 @@
   .thumb button { position: absolute; top: -8px; right: -8px; padding: 0; width: 26px; height: 26px; border-radius: 50%; line-height: 1; }
   label.back { display: inline-block; cursor: pointer; border-radius: 12px; padding: 12px 18px; font-weight: 600; margin-top: 4px; }
   label.back:focus-within { outline: 3px solid var(--butter); outline-offset: 2px; }
+
+  /* ---------- Activities ---------- */
+  input[type="date"], input[type="time"], input[type="number"], select { width: 100%; padding: 12px 14px; font: inherit; border: 2px solid var(--line); border-radius: 12px; margin: 6px 0 16px; background: #fff; color: var(--ink); }
+  input[type="date"]:focus, input[type="time"]:focus, input[type="number"]:focus, select:focus { outline: 3px solid var(--sky); border-color: var(--ink); }
+  .field > label { display: block; font-weight: 600; }
+  #pick-map { height: 300px; border-radius: 12px; border: 2px solid var(--line); margin: 8px 0; z-index: 0; }
+  .results button { display: block; width: 100%; text-align: left; background: #fff; color: var(--ink); border: 2px solid var(--line); margin: 6px 0; font-weight: 400; font-size: 0.95rem; }
+  .results button:hover { background: var(--butter); }
+  .search-row { display: flex; gap: 8px; }
+  .search-row input { margin-bottom: 8px; }
+  .search-row button { margin: 6px 0 8px; white-space: nowrap; }
+  #pin-status { font-size: 0.95rem; min-height: 1.4em; margin: 4px 0 14px; }
 </style>
 </head>
 <body>
@@ -267,11 +280,81 @@
   </div>
 </div></section>
 
-<section id="activities" class="screen"><div class="page"><h2>Activities</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
+<!-- Activities: hub -->
+<section id="activities" class="screen"><div class="page">
+  <h2>Activities</h2>
+  <p>Pick a package, then pick a plan. I’ll get a notification right away.</p>
+  <div class="grid" style="margin-top:18px">
+    <button class="tile about" data-go="act-cheer"><strong>Cheer-up Package</strong><span>Small things to brighten your day.</span></button>
+    <button class="tile convo" data-go="act-adv"><strong>Adventure Package</strong><span>Let’s go somewhere.</span></button>
+  </div>
+  <button class="back" data-go="dashboard">Back to dashboard</button>
+</div></section>
+
+<!-- Activities: Cheer-up Package -->
+<section id="act-cheer" class="screen"><div class="page">
+  <h2>Cheer-up Package</h2>
+  <div class="grid" style="margin-top:18px">
+    <button class="tile about" data-act="icecream"><strong>Ice cream date with me</strong><span>Sweet and simple.</span></button>
+    <button class="tile convo" data-act="formal"><strong>Formal date</strong><span>Dress up, pick a place.</span></button>
+    <button class="tile convo" data-act="song"><strong>Sing you a song</strong><span>Request a serenade.</span></button>
+    <button class="tile about" data-act="movie"><strong>Movie Marathon &amp; Chill</strong><span>You pick the movie.</span></button>
+  </div>
+  <div class="btnrow">
+    <button class="back" data-go="activities">Back</button>
+    <button class="back" data-go="dashboard">Dashboard</button>
+  </div>
+</div></section>
+
+<!-- Activities: Adventure Package -->
+<section id="act-adv" class="screen"><div class="page">
+  <h2>Adventure Package</h2>
+  <div class="grid" style="margin-top:18px">
+    <button class="tile about" data-act="hiking"><strong>Hiking</strong><span>Trails and views.</span></button>
+    <button class="tile convo" data-act="jogging"><strong>Jogging</strong><span>Run it out together.</span></button>
+    <button class="tile convo" data-act="camping"><strong>Camping</strong><span>Tents and stars.</span></button>
+    <button class="tile about" data-act="roadtrip"><strong>Chill ride / road trip</strong><span>Playlist on, windows down.</span></button>
+    <button class="tile convo" data-act="beach" style="grid-column:1 / -1"><strong>Beach day</strong><span>Sun, sand, and sea.</span></button>
+  </div>
+  <div class="btnrow">
+    <button class="back" data-go="activities">Back</button>
+    <button class="back" data-go="dashboard">Dashboard</button>
+  </div>
+</div></section>
+
+<!-- Activities: the one form shared by every activity -->
+<section id="act-form" class="screen read"><div class="page wide">
+  <h2 id="act-title"></h2>
+  <p id="act-intro"></p>
+  <div id="act-body">
+    <div id="act-fields"></div>
+    <div id="place-box" class="hidden field">
+      <label for="place-search" id="place-label"></label>
+      <div class="search-row">
+        <input type="search" id="place-search" placeholder="Search a place, then pick a result">
+        <button id="place-go" type="button">Search</button>
+      </div>
+      <div class="results" id="place-results"></div>
+      <div id="pick-map" aria-label="Map: tap to drop a pin"></div>
+      <p id="pin-status">Tap the map to drop a pin (optional if you type the place below).</p>
+      <label for="place-text">Or type the place name</label>
+      <input type="text" id="place-text" placeholder="For example: Mt. Matutum">
+    </div>
+    <button id="act-submit" style="width:100%">Send request</button>
+    <p id="act-error" role="alert" style="color:#b3261e;min-height:1.4em"></p>
+  </div>
+  <div id="act-result" class="hidden"><div class="mood-msg" id="act-message"></div></div>
+  <div class="btnrow">
+    <button class="back" id="act-back" data-go="activities">Back</button>
+    <button class="back" data-go="dashboard">Dashboard</button>
+  </div>
+</div></section>
+
 <section id="kamusta" class="screen"><div class="page"><h2>Kamusta Ako</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
 
 <script src="config.js"></script>
 <script src="topics.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
   // Turns text into a scrambled code (SHA-256)
   async function hashText(text) {
@@ -668,6 +751,243 @@
   document.querySelector('[data-go="convo-hers"]').addEventListener("click", () => {
     document.getElementById("topic-privacy").textContent = "This goes straight to " + YOUR_NAME + ".";
   });
+
+  // ---------------- Activities ----------------
+  // Each activity: its package page, a title, a short intro, the questions, and (optionally) a map.
+  // To change wording, edit the text in quotes. Types: date, time, text, number, choice.
+  const ACTIVITIES = {
+    icecream: { pack: "act-cheer", title: "Ice cream date with me",
+      intro: "Pick a day and a time for our ice cream date.",
+      fields: [ { id: "date", type: "date", label: "Date" }, { id: "time", type: "time", label: "Time" } ] },
+    formal: { pack: "act-cheer", title: "Formal date",
+      intro: "A proper date. Pick the day, the meal, and a restaurant you’ve been wanting to try.",
+      fields: [ { id: "date", type: "date", label: "Date" },
+                { id: "meal", type: "choice", label: "Which meal?", options: ["Breakfast", "Lunch", "Dinner", "Whole day date"] } ],
+      place: { label: "Restaurant you want to try" } },
+    song: { pack: "act-cheer", title: "Sing you a song",
+      intro: "Request any song and I’ll serenade you.",
+      fields: [ { id: "song", type: "text", label: "Song title" },
+                { id: "how", type: "choice", label: "How should I serenade you?", options: ["Through a call", "Face to face"] } ] },
+    movie: { pack: "act-cheer", title: "Movie Marathon & Chill",
+      intro: "Pick the date, the time, and what we’re watching.",
+      fields: [ { id: "date", type: "date", label: "Date" }, { id: "time", type: "time", label: "Time" },
+                { id: "movie", type: "text", label: "Movie title" } ] },
+    hiking: { pack: "act-adv", title: "Hiking",
+      intro: "Where do you want to hike, and when?",
+      fields: [ { id: "date", type: "date", label: "Date" } ],
+      place: { label: "Where to hike" } },
+    jogging: { pack: "act-adv", title: "Jogging",
+      intro: "Pick the day, the distance, and where we run.",
+      fields: [ { id: "date", type: "date", label: "Date" },
+                { id: "km", type: "number", label: "How many kilometers?" } ],
+      place: { label: "Where to jog" } },
+    camping: { pack: "act-adv", title: "Camping",
+      intro: "When do you want to camp, and where?",
+      fields: [ { id: "date", type: "date", label: "Date" } ],
+      place: { label: "Where to camp" } },
+    roadtrip: { pack: "act-adv", title: "Chill ride / road trip",
+      intro: "Pick the day and where you’d like to go.",
+      fields: [ { id: "date", type: "date", label: "Date" } ],
+      place: { label: "Where to go" } },
+    beach: { pack: "act-adv", title: "Beach day",
+      intro: "Pick the day and which beach.",
+      fields: [ { id: "date", type: "date", label: "Date" } ],
+      place: { label: "Which beach" } }
+  };
+
+  const ACT_THANKS = [
+    "Sent! I got the notification and I’m already excited. I’ll message you soon.",
+    "Request received, madame. Consider it officially on my calendar.",
+    "Done! Thank you for letting me plan something with you :)",
+    "Got it! Now I have something to look forward to."
+  ];
+
+  function todayStr() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function fmtDate(v) {
+    const [y, m, d] = v.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  }
+  function fmtTime(v) {
+    const [h, m] = v.split(":").map(Number);
+    return ((h % 12) || 12) + ":" + String(m).padStart(2, "0") + " " + (h >= 12 ? "PM" : "AM");
+  }
+
+  // ----- map (Leaflet + OpenStreetMap, free) -----
+  let map = null, marker = null, pin = null;
+  function ensureMap() {
+    if (map || typeof L === "undefined") return;
+    map = L.map("pick-map").setView([12.9, 122.5], 5);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19, attribution: "© OpenStreetMap contributors"
+    }).addTo(map);
+    map.on("click", e => setPin(e.latlng.lat, e.latlng.lng, null));
+  }
+  function setPin(lat, lng, name) {
+    pin = { lat: lat, lng: lng, name: name };
+    if (marker) marker.setLatLng([lat, lng]); else marker = L.marker([lat, lng]).addTo(map);
+    showPinStatus();
+    if (!name) {   // try to find a name for the spot (best effort)
+      fetch("https://nominatim.openstreetmap.org/reverse?format=json&zoom=17&lat=" + lat + "&lon=" + lng)
+        .then(r => r.json())
+        .then(d => { if (pin && pin.lat === lat && pin.lng === lng && d.display_name) { pin.name = d.display_name; showPinStatus(); } })
+        .catch(() => {});
+    }
+  }
+  function showPinStatus() {
+    document.getElementById("pin-status").textContent =
+      "Pinned: " + (pin.name || (pin.lat.toFixed(5) + ", " + pin.lng.toFixed(5)));
+  }
+  async function searchPlace() {
+    const q = document.getElementById("place-search").value.trim();
+    const box = document.getElementById("place-results");
+    if (!q) return;
+    box.textContent = "Searching...";
+    try {
+      const res = await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=5&viewbox=116,21.5,127,4.5&q=" + encodeURIComponent(q));
+      const list = await res.json();
+      box.innerHTML = "";
+      if (!list.length) { box.textContent = "No results. Try another spelling, or just tap the map."; return; }
+      list.forEach(r => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = r.display_name;
+        b.addEventListener("click", () => {
+          const lat = parseFloat(r.lat), lng = parseFloat(r.lon);
+          if (map) { setPin(lat, lng, r.display_name); map.setView([lat, lng], 15); }
+          box.innerHTML = "";
+        });
+        box.appendChild(b);
+      });
+    } catch (e) {
+      box.textContent = "Search isn’t working right now. You can type the place name below instead.";
+    }
+  }
+
+  // ----- the shared form -----
+  let currentAct = null;
+  function openActivity(key) {
+    const cfg = ACTIVITIES[key];
+    currentAct = key;
+    document.getElementById("act-title").textContent = cfg.title;
+    document.getElementById("act-intro").textContent = cfg.intro;
+    document.getElementById("act-back").dataset.go = cfg.pack;
+    document.getElementById("act-error").textContent = "";
+    document.getElementById("act-body").classList.remove("hidden");
+    document.getElementById("act-result").classList.add("hidden");
+
+    const holder = document.getElementById("act-fields");
+    holder.innerHTML = "";
+    cfg.fields.forEach(f => {
+      const wrap = document.createElement("div");
+      wrap.className = "field";
+      const label = document.createElement("label");
+      label.htmlFor = "f-" + f.id; label.textContent = f.label;
+      let input;
+      if (f.type === "choice") {
+        input = document.createElement("select");
+        const first = document.createElement("option");
+        first.value = ""; first.textContent = "Choose one..."; input.appendChild(first);
+        f.options.forEach(o => { const op = document.createElement("option"); op.value = o; op.textContent = o; input.appendChild(op); });
+      } else {
+        input = document.createElement("input");
+        input.type = f.type;
+        if (f.type === "date") input.min = todayStr();          // blocks past dates
+        if (f.type === "number") { input.min = "0.5"; input.max = "100"; input.step = "0.5"; input.inputMode = "decimal"; }
+      }
+      input.id = "f-" + f.id;
+      wrap.append(label, input);
+      holder.appendChild(wrap);
+    });
+
+    const placeBox = document.getElementById("place-box");
+    pin = null;
+    document.getElementById("place-results").innerHTML = "";
+    document.getElementById("place-search").value = "";
+    document.getElementById("place-text").value = "";
+    document.getElementById("pin-status").textContent = "Tap the map to drop a pin (optional if you type the place below).";
+    if (cfg.place) {
+      placeBox.classList.remove("hidden");
+      document.getElementById("place-label").textContent = cfg.place.label;
+    } else {
+      placeBox.classList.add("hidden");
+    }
+    show("act-form");
+    if (cfg.place) {
+      ensureMap();
+      if (map) {
+        if (marker) { map.removeLayer(marker); marker = null; }
+        setTimeout(() => map.invalidateSize(), 150);
+      } else {
+        document.getElementById("pick-map").classList.add("hidden");
+        document.getElementById("pin-status").textContent = "The map couldn’t load, so please type the place name.";
+      }
+    }
+  }
+
+  async function submitActivity() {
+    const cfg = ACTIVITIES[currentAct];
+    const error = document.getElementById("act-error");
+    const button = document.getElementById("act-submit");
+    const details = {};
+    error.textContent = "";
+    let dateVal = "", timeVal = "";
+
+    for (const f of cfg.fields) {
+      const v = document.getElementById("f-" + f.id).value.trim();
+      if (!v) { error.textContent = "Please fill in: " + f.label; return; }
+      if (f.type === "date") {
+        if (v < todayStr()) { error.textContent = "That date has already passed. Pick today or later."; return; }
+        dateVal = v; details[f.label] = fmtDate(v);
+      } else if (f.type === "time") {
+        timeVal = v; details[f.label] = fmtTime(v);
+      } else if (f.type === "number") {
+        if (!(parseFloat(v) > 0)) { error.textContent = "Please enter a distance above 0."; return; }
+        details[f.label] = v + " km";
+      } else {
+        details[f.label] = v;
+      }
+    }
+    if (dateVal === todayStr() && timeVal) {
+      const now = new Date();
+      const [h, m] = timeVal.split(":").map(Number);
+      if (h * 60 + m < now.getHours() * 60 + now.getMinutes()) { error.textContent = "That time has already passed today. Pick a later time."; return; }
+    }
+    if (cfg.place) {
+      const typed = document.getElementById("place-text").value.trim();
+      if (!typed && !pin) { error.textContent = "Please type a place or pin it on the map."; return; }
+      details[cfg.place.label] = typed || (pin && pin.name) || "See map link";
+      if (pin) {
+        details["Pinned place"] = pin.name || "(no name found)";
+        details["Coordinates"] = pin.lat.toFixed(6) + ", " + pin.lng.toFixed(6);
+        details["Open in Google Maps"] = "https://www.google.com/maps?q=" + pin.lat.toFixed(6) + "," + pin.lng.toFixed(6);
+      }
+    }
+
+    button.disabled = true; button.textContent = "Sending...";
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ type: "request", title: cfg.title, details: details })
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      document.getElementById("act-body").classList.add("hidden");
+      document.getElementById("act-result").classList.remove("hidden");
+      document.getElementById("act-message").textContent = ACT_THANKS[Math.floor(Math.random() * ACT_THANKS.length)];
+    } catch (e) {
+      error.textContent = "That didn’t send. Check your internet and try again.";
+    }
+    button.disabled = false; button.textContent = "Send request";
+  }
+
+  document.querySelectorAll("[data-act]").forEach(btn => btn.addEventListener("click", () => openActivity(btn.dataset.act)));
+  document.getElementById("act-submit").addEventListener("click", submitActivity);
+  document.getElementById("place-go").addEventListener("click", searchPlace);
+  document.getElementById("place-search").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); searchPlace(); } });
 </script>
 </body>
 </html>
