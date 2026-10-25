@@ -3,151 +3,172 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#E9C2A9">
 <title>Just for you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Nunito:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #1f2a44;
-    --butter: #f6d55c;
-    --sky: #8ec5e8;
-    --paper: #fbfaf7;
-    --line: #dfe6ee;
+    --ink: #5C684F;
+    --rose: #CC6F5A;
+    --sand: #E9C2A9;
+    --sage: #A0B49C;
+    --paper: #F1EFE4;
+    --sand-soft: #EFE2D2;
+    --font-display: "Press Start 2P", "Courier New", monospace;
+    --font-body: "Pixelify Sans", "Courier New", monospace;
+    /* the pixel frame: a border with notched corners */
+    --frame: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink);
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: "Nunito", system-ui, sans-serif;
-    color: var(--ink);
-    background: var(--paper);
+    margin: 0; min-height: 100vh;
+    font-family: var(--font-body); font-size: 1.05rem; color: var(--ink);
+    background-color: var(--paper);
+    background-image: linear-gradient(45deg, rgba(233,194,169,.28) 25%, transparent 25%, transparent 75%, rgba(233,194,169,.28) 75%),
+                      linear-gradient(45deg, rgba(233,194,169,.28) 25%, transparent 25%, transparent 75%, rgba(233,194,169,.28) 75%);
+    background-size: 32px 32px; background-position: 0 0, 16px 16px;
   }
-  h1, h2 { font-family: "Bricolage Grotesque", system-ui, sans-serif; margin: 0; }
-  .screen { display: none; min-height: 100vh; padding: 32px 20px; }
-  .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-
-  /* ---------- Password screen ---------- */
-  #gate { background: linear-gradient(160deg, var(--sky) 0%, var(--butter) 100%); }
-  .gate-box { background: var(--paper); padding: 36px 28px; border-radius: 20px; width: 100%; max-width: 380px; text-align: center; }
-  .gate-box h1 { font-size: 1.9rem; margin-bottom: 8px; }
-  .gate-box p { margin: 0 0 20px; }
-  input[type="password"] {
-    width: 100%; padding: 14px; font: inherit; font-size: 1.05rem;
-    border: 2px solid var(--line); border-radius: 12px; margin-bottom: 12px;
-  }
-  input[type="password"]:focus { outline: 3px solid var(--sky); border-color: var(--ink); }
-  button {
-    font: inherit; font-weight: 600; cursor: pointer;
-    background: var(--ink); color: #fff; border: 0; border-radius: 12px; padding: 14px 20px;
-  }
-  button:hover { background: #33416a; }
-  button:focus-visible { outline: 3px solid var(--butter); outline-offset: 2px; }
-  #gate-error { color: #b3261e; min-height: 1.4em; margin: 10px 0 0; }
-
-  /* ---------- Dashboard ---------- */
-  #dashboard { justify-content: flex-start; }
-  .dash { width: 100%; max-width: 640px; }
-  .dash h2 { font-size: 2rem; margin-bottom: 6px; }
-  .dash > p { margin: 0 0 24px; }
-  .grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
-  @media (min-width: 560px) { .grid { grid-template-columns: 1fr 1fr; } }
-  .tile {
-    text-align: left; background: #fff; color: var(--ink);
-    border: 2px solid var(--line); border-radius: 16px; padding: 20px;
-  }
-  .tile:hover { background: #fff; border-color: var(--ink); }
-  .tile strong { display: block; font-family: "Bricolage Grotesque", sans-serif; font-size: 1.25rem; margin-bottom: 4px; }
-  .tile span { font-weight: 400; font-size: 0.95rem; }
-  .tile.mood   { border-left: 10px solid var(--butter); }
-  .tile.convo  { border-left: 10px solid var(--sky); }
-  .tile.about  { border-left: 10px solid var(--butter); }
-  .tile.act    { border-left: 10px solid var(--sky); }
-  .tile.kamusta{ border-left: 10px solid var(--butter); grid-column: 1 / -1; }
-
-  /* ---------- Placeholder pages ---------- */
-  .page { width: 100%; max-width: 560px; }
-  .page h2 { margin-bottom: 10px; }
-  .back { background: transparent; color: var(--ink); border: 2px solid var(--ink); margin-top: 20px; }
-  .back:hover { background: var(--butter); }
-
-  /* ---------- Mood Tracker ---------- */
-  #mood { transition: background-color 0.3s; }
-  .mood-box { width: 100%; max-width: 480px; text-align: center; }
-  .mood-photo { width: 220px; height: 220px; border-radius: 50%; object-fit: cover; border: 6px solid var(--paper); background: var(--paper); }
-  .mood-emoji { font-size: 5rem; line-height: 220px; width: 220px; height: 220px; border-radius: 50%; background: var(--paper); margin: 0 auto; display: none; }
-  .mood-photo-wrap { margin: 18px 0; display: flex; justify-content: center; }
-  .mood-value { font-family: "Bricolage Grotesque", sans-serif; font-size: 3rem; margin: 0; }
-  input[type="range"] { width: 100%; margin: 14px 0 4px; accent-color: var(--ink); height: 32px; }
-  .range-labels { display: flex; justify-content: space-between; font-size: 0.95rem; }
-  textarea { width: 100%; font: inherit; padding: 12px; border: 2px solid var(--line); border-radius: 12px; margin: 16px 0 12px; resize: vertical; }
-  textarea:focus { outline: 3px solid var(--sky); border-color: var(--ink); }
-  .privacy { font-size: 0.9rem; margin: 0 0 14px; }
-  .mood-msg { background: var(--paper); border-radius: 16px; padding: 20px; font-size: 1.15rem; margin: 18px 0; }
+  h1, h2 { font-family: var(--font-display); font-weight: 400; line-height: 1.5; margin: 0; }
+  h2 { font-size: clamp(1rem, 4.2vw, 1.35rem); }
   .hidden { display: none !important; }
-
-  /* ---------- About me ---------- */
+  .screen { display: none; min-height: 100vh; padding: 36px 24px; position: relative; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .screen.read.active { justify-content: flex-start; }
-  .page.wide { max-width: 640px; }
-  .page.wide p { line-height: 1.7; font-size: 1.05rem; }
-  .page h3 { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.2rem; margin: 26px 0 8px; }
-  .media iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 12px; margin: 6px 0 14px; background: #e9edf3; display: block; }
-  .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+
+  /* ---------- pixel scenery ---------- */
+  .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 72px; background-repeat: repeat-x; background-size: 384px 72px; background-position: bottom left; pointer-events: none; z-index: 1; }
+  .deco { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+  .deco svg, .dash-heart svg { position: absolute; display: block; }
+  .dash-heart { display: inline-block; position: relative; margin-bottom: 14px; }
+  .dash-heart svg { position: static; }
+  .bob  { animation: bob 2s steps(2) infinite; }
+  .bob2 { animation: bob 2.6s steps(2) infinite 0.6s; }
+  @keyframes bob { 50% { transform: translateY(-8px); } }
+  @media (prefers-reduced-motion: reduce) { .bob, .bob2 { animation: none; } }
+
+  /* ---------- buttons ---------- */
+  button {
+    font-family: var(--font-body); font-weight: 600; font-size: 1rem; cursor: pointer;
+    background: var(--ink); color: var(--paper); border: 0; border-radius: 0; padding: 14px 20px;
+    box-shadow: var(--frame), inset -4px -4px 0 0 rgba(0,0,0,.22), inset 4px 4px 0 0 rgba(255,255,255,.18);
+  }
+  button:hover { background: var(--rose); }
+  button:active { transform: translateY(3px); }
+  button:disabled { opacity: .6; cursor: default; }
+  button:focus-visible, label.back:focus-within, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px dashed var(--rose); outline-offset: 7px; }
+  .back, label.back { background: var(--paper); color: var(--ink); box-shadow: var(--frame); margin-top: 24px; }
+  .back:hover { background: var(--sand); }
+  label.back { display: inline-block; cursor: pointer; padding: 12px 18px; font-weight: 600; margin-top: 4px; }
+  .btnrow { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 28px; }
   .btnrow .back { margin-top: 0; }
 
-  /* ---------- Convo Stimulus ---------- */
-  input[type="search"], input[type="text"] { width: 100%; padding: 12px 14px; font: inherit; border: 2px solid var(--line); border-radius: 12px; margin: 6px 0 16px; }
-  input[type="search"]:focus, input[type="text"]:focus { outline: 3px solid var(--sky); border-color: var(--ink); }
-  .topic { background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 16px 18px; margin: 0 0 12px; display: flex; gap: 14px; align-items: flex-start; }
-  .topic .num { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; background: var(--butter); border-radius: 10px; padding: 6px 10px; min-width: 56px; text-align: center; }
-  .topic h3 { margin: 0 0 4px; font-size: 1.1rem; }
+  /* ---------- inputs ---------- */
+  input[type="password"], input[type="search"], input[type="text"], input[type="date"], input[type="time"], input[type="number"], select, textarea {
+    width: 100%; padding: 12px 14px; font: inherit; color: var(--ink); background: var(--paper);
+    border: 0; border-radius: 0; margin: 8px 0 18px; box-shadow: var(--frame), inset 4px 4px 0 0 rgba(92,104,79,.16);
+  }
+  textarea { resize: vertical; }
+  input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 32px; background: transparent; margin: 14px 0 4px; box-shadow: none; }
+  input[type="range"]::-webkit-slider-runnable-track { height: 12px; background: var(--paper); border: 3px solid var(--ink); }
+  input[type="range"]::-moz-range-track { height: 12px; background: var(--paper); border: 3px solid var(--ink); border-radius: 0; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; margin-top: -4px; background: var(--rose); border: 3px solid var(--ink); border-radius: 0; }
+  input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; background: var(--rose); border: 3px solid var(--ink); border-radius: 0; }
+  .field > label { display: block; font-weight: 600; }
+
+  /* ---------- password screen ---------- */
+  #gate { background: var(--sand); overflow: hidden; }
+  .gate-box { position: relative; z-index: 2; background: var(--paper); padding: 36px 28px; width: 100%; max-width: 400px; text-align: center;
+    box-shadow: var(--frame), 12px 12px 0 0 rgba(92,104,79,.28); }
+  .gate-box h1 { font-size: clamp(1.2rem, 6vw, 1.6rem); margin-bottom: 18px; color: var(--rose); }
+  .gate-box p { margin: 0 0 18px; line-height: 1.6; }
+  #gate-error { color: #9E4632; min-height: 1.4em; margin: 14px 0 0; }
+
+  /* ---------- dashboard ---------- */
+  #dashboard { overflow: hidden; padding-bottom: 130px; }
+  #dashboard.active { justify-content: flex-start; }
+  .dash { width: 100%; max-width: 640px; position: relative; z-index: 2; }
+  .dash h2 { margin-bottom: 14px; }
+  .dash > p { margin: 0 0 28px; line-height: 1.6; }
+  .grid { display: grid; gap: 22px; grid-template-columns: 1fr; }
+  @media (min-width: 560px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .tile { --bar: var(--rose); text-align: left; background: var(--paper); color: var(--ink); padding: 20px 20px 20px 34px;
+    box-shadow: var(--frame), inset 12px 0 0 0 var(--bar); }
+  .tile:hover { background: var(--sand-soft); transform: translateY(-3px); }
+  .tile strong { display: block; font-family: var(--font-body); font-size: 1.2rem; margin-bottom: 4px; }
+  .tile span { font-weight: 400; font-size: 1rem; }
+  .tile.mood, .tile.act { --bar: var(--rose); }
+  .tile.convo, .tile.kamusta { --bar: var(--sage); }
+  .tile.about { --bar: var(--sand); }
+  .tile.kamusta { grid-column: 1 / -1; }
+
+  /* ---------- generic pages ---------- */
+  .page { width: 100%; max-width: 560px; }
+  .page h2 { margin-bottom: 14px; }
+  .page.wide { max-width: 640px; }
+  .page.wide p { line-height: 1.7; }
+  .page h3 { font-family: var(--font-body); font-size: 1.25rem; margin: 28px 0 10px; }
+  .media iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; margin: 10px 0 20px; background: var(--sand-soft); display: block; box-shadow: var(--frame); }
+
+  /* ---------- mood tracker ---------- */
+  #mood { transition: background-color 0.3s; }
+  .mood-box { width: 100%; max-width: 480px; text-align: center; }
+  .mood-photo { width: 220px; height: 220px; object-fit: cover; background: var(--paper); box-shadow: var(--frame); }
+  .mood-emoji { font-size: 5rem; line-height: 220px; width: 220px; height: 220px; background: var(--paper); margin: 0 auto; display: none; box-shadow: var(--frame); }
+  .mood-photo-wrap { margin: 22px 0; display: flex; justify-content: center; }
+  .mood-value { font-family: var(--font-display); font-size: 2rem; margin: 0; }
+  .range-labels { display: flex; justify-content: space-between; }
+  .privacy { font-size: 0.95rem; margin: 0 0 16px; }
+  .mood-msg { background: var(--paper); padding: 20px; font-size: 1.15rem; line-height: 1.6; margin: 22px 0; box-shadow: var(--frame); }
+
+  /* ---------- convo stimulus ---------- */
+  .topic { background: var(--paper); padding: 16px 18px; margin: 0 0 22px; display: flex; gap: 16px; align-items: flex-start; box-shadow: var(--frame); }
+  .topic .num { font-family: var(--font-display); font-size: 0.75rem; background: var(--sand); padding: 10px 8px; min-width: 56px; text-align: center; }
+  .topic h3 { margin: 0 0 4px; font-size: 1.15rem; }
   .topic p { margin: 0 0 6px; line-height: 1.5; font-size: 1rem; }
   .topic a { color: var(--ink); font-weight: 600; margin-right: 12px; }
-  .thumbs { display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0 12px; }
+  .thumbs { display: flex; gap: 16px; flex-wrap: wrap; margin: 10px 0 14px; }
   .thumb { position: relative; }
-  .thumb img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; display: block; }
-  .thumb button { position: absolute; top: -8px; right: -8px; padding: 0; width: 26px; height: 26px; border-radius: 50%; line-height: 1; }
-  label.back { display: inline-block; cursor: pointer; border-radius: 12px; padding: 12px 18px; font-weight: 600; margin-top: 4px; }
-  label.back:focus-within { outline: 3px solid var(--butter); outline-offset: 2px; }
+  .thumb img { width: 84px; height: 84px; object-fit: cover; display: block; box-shadow: var(--frame); }
+  .thumb button { position: absolute; top: -12px; right: -12px; padding: 0; width: 26px; height: 26px; line-height: 1; }
 
-  /* ---------- Activities ---------- */
-  input[type="date"], input[type="time"], input[type="number"], select { width: 100%; padding: 12px 14px; font: inherit; border: 2px solid var(--line); border-radius: 12px; margin: 6px 0 16px; background: #fff; color: var(--ink); }
-  input[type="date"]:focus, input[type="time"]:focus, input[type="number"]:focus, select:focus { outline: 3px solid var(--sky); border-color: var(--ink); }
-  .field > label { display: block; font-weight: 600; }
-  #pick-map { height: 300px; border-radius: 12px; border: 2px solid var(--line); margin: 8px 0; z-index: 0; }
-  .results button { display: block; width: 100%; text-align: left; background: #fff; color: var(--ink); border: 2px solid var(--line); margin: 6px 0; font-weight: 400; font-size: 0.95rem; }
-  .results button:hover { background: var(--butter); }
-  .search-row { display: flex; gap: 8px; }
-  .search-row input { margin-bottom: 8px; }
-  .search-row button { margin: 6px 0 8px; white-space: nowrap; }
-  #pin-status { font-size: 0.95rem; min-height: 1.4em; margin: 4px 0 14px; }
+  /* ---------- activities ---------- */
+  #pick-map { height: 300px; margin: 12px 0; z-index: 0; box-shadow: var(--frame); }
+  .results button { display: block; width: 100%; text-align: left; background: var(--paper); color: var(--ink); margin: 10px 0; font-weight: 400; font-size: 0.95rem; box-shadow: var(--frame); }
+  .results button:hover { background: var(--sand); }
+  .search-row { display: flex; gap: 16px; }
+  .search-row button { margin: 8px 0 18px; white-space: nowrap; }
+  #pin-status { font-size: 0.95rem; min-height: 1.4em; margin: 6px 0 16px; }
 
-  /* ---------- Kamusta Ako ---------- */
-  .k-label { font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; margin: 22px 0 4px; }
-  .k-feeling { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.9rem; line-height: 1.2; margin: 0; }
-  .hp-row { display: flex; justify-content: space-between; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; letter-spacing: 0.08em; margin: 22px 0 6px; }
-  .hp { position: relative; height: 36px; border: 4px solid var(--ink); border-radius: 10px; background: #fff; overflow: hidden; }
-  .hp-fill { height: 100%; width: 0; transition: width 1s ease-out, background-color 0.4s; }
+  /* ---------- kamusta ako ---------- */
+  .k-label { font-size: 0.9rem; letter-spacing: 0.08em; text-transform: uppercase; margin: 24px 0 6px; }
+  .k-feeling { font-family: var(--font-display); font-size: 1.15rem; line-height: 1.6; margin: 0; color: var(--rose); }
+  .hp-row { display: flex; justify-content: space-between; font-family: var(--font-display); font-size: 0.8rem; margin: 26px 0 10px; }
+  .hp { position: relative; height: 36px; background: var(--paper); overflow: hidden; box-shadow: var(--frame); }
+  .hp-fill { height: 100%; width: 0; transition: width 1s steps(10), background-color 0.4s; }
   .hp::after { content: ""; position: absolute; inset: 0; pointer-events: none;
-    background: repeating-linear-gradient(90deg, transparent 0, transparent calc(10% - 2px), rgba(31,42,68,.3) calc(10% - 2px), rgba(31,42,68,.3) 10%); }
-  .hp-hint { margin: 8px 0 0; font-size: 0.98rem; }
-  .polaroid { background: #fff; padding: 12px 12px 14px; max-width: 340px; margin: 28px auto 20px; transform: rotate(-2deg); box-shadow: 0 8px 22px rgba(31,42,68,.18); }
-  .polaroid img, .polaroid iframe { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border: 0; background: #e9edf3; }
-  .polaroid .cap { text-align: center; margin: 12px 0 0; font-family: "Bricolage Grotesque", sans-serif; }
-  .note-card { background: #fff6cf; border-left: 6px solid var(--butter); border-radius: 8px; padding: 16px 18px; line-height: 1.65; margin: 20px 0; }
-  .affection { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+    background: repeating-linear-gradient(90deg, transparent 0, transparent calc(10% - 3px), rgba(92,104,79,.55) calc(10% - 3px), rgba(92,104,79,.55) 10%); }
+  .hp-hint { margin: 14px 0 0; }
+  .polaroid { background: var(--paper); padding: 12px 12px 14px; max-width: 340px; margin: 34px auto 26px; transform: rotate(-2deg); box-shadow: var(--frame), 10px 10px 0 0 var(--sand); }
+  .polaroid img, .polaroid iframe { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border: 0; background: var(--sand-soft); }
+  .polaroid .cap { text-align: center; margin: 12px 0 0; font-weight: 600; }
+  .note-card { background: var(--sand-soft); padding: 16px 18px 16px 24px; line-height: 1.65; margin: 24px 0; box-shadow: var(--frame), inset 8px 0 0 0 var(--rose); }
+  .affection { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 10px; }
   .affection button { flex: 1; min-width: 140px; }
-  #k-status { margin: 10px 0 0; min-height: 1.4em; }
+  #k-status { margin: 14px 0 0; min-height: 1.4em; }
 </style>
 </head>
 <body>
 
 <!-- Password screen -->
 <section id="gate" class="screen active">
+  <div class="deco" id="gate-deco" aria-hidden="true"></div>
+  <div class="ground" aria-hidden="true"></div>
   <div class="gate-box">
-    <h1>Hi, you.</h1>
-    <p>Type our secret word to come in.</p>
+    <h1>Hi Madame!</h1>
+    <p>Ang password kay ang imo nga love language, ang ginahambal mo sa akon nga makompleto adlaw ko hahaha (starts with m)</p>
     <input type="password" id="pw" placeholder="Secret word" autocomplete="off">
     <button id="enter" style="width:100%">Open</button>
     <p id="gate-error" role="alert"></p>
@@ -156,9 +177,11 @@
 
 <!-- Dashboard -->
 <section id="dashboard" class="screen">
+  <div class="ground" aria-hidden="true"></div>
   <div class="dash">
-    <h2>Welcome in</h2>
-    <p>Pick anything. Everything here was made for you.</p>
+    <span class="dash-heart" id="dash-heart" aria-hidden="true"></span>
+    <h2>Day Good Madame,</h2>
+    <p>Pilii lang diri ano trip mo ah, ako na bahala sa imo haha</p>
     <div class="grid">
       <button class="tile mood"    data-go="mood"><strong>Mood Tracker</strong><span>Tell me how today feels.</span></button>
       <button class="tile convo"   data-go="convo"><strong>Convo Stimulus</strong><span>Things we could talk about.</span></button>
@@ -1076,7 +1099,7 @@
     document.getElementById("k-energy-text").textContent = energy + " / 100";
     document.getElementById("k-bar").setAttribute("aria-label", "Energy " + energy + " out of 100");
     const fill = document.getElementById("k-fill");
-    fill.style.backgroundColor = energy <= 30 ? "#e5604d" : energy <= 60 ? "#f6d55c" : "#6cc070";
+    fill.style.backgroundColor = energy <= 30 ? "#CC6F5A" : energy <= 60 ? "#E9C2A9" : "#A0B49C";
     fill.style.width = "0%";
     setTimeout(() => { fill.style.width = energy + "%"; }, 80);
     document.getElementById("k-hint").textContent =
@@ -1127,6 +1150,71 @@
       }
     });
   });
+
+  // ---------------- Pixel scenery ----------------
+  // Little pictures drawn from letter maps. Each letter is one colored square.
+  const SPRITES = {
+    heart: ["..OO.OO..", ".OXXOXXO.", "OXHXXXXXO", "OXXXXXXXO", ".OXXXXXO.", "..OXXXO..", "...OXO...", "....O...."],
+    flower: ["..PPP..", ".PPYPP.", "..PPP..", "...S...", ".LLS...", "...SLL.", "...S...", "...S..."],
+    tree: ["..LLLLL..", ".LLLDLLL.", "LLLLLLLLL", "LLDLLLLLL", ".LLLLLLL.", "....T....", "....T....", "....T...."],
+    sparkle: ["..X..", ".XXX.", "XXXXX", ".XXX.", "..X.."]
+  };
+  const COLORS = { O: "#5C684F", X: "#CC6F5A", H: "#E9C2A9", P: "#CC6F5A", Y: "#E9C2A9", S: "#5C684F", L: "#A0B49C", D: "#5C684F", T: "#5C684F" };
+
+  function sprite(name, scale, xColor) {
+    const map = SPRITES[name];
+    let rects = "";
+    map.forEach((row, y) => [...row].forEach((ch, x) => {
+      if (ch === ".") return;
+      const fill = (ch === "X" && xColor) ? xColor : COLORS[ch];
+      rects += '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + fill + '"/>';
+    }));
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + map[0].length + ' ' + map.length + '" width="' + map[0].length * scale +
+           '" height="' + map.length * scale + '" shape-rendering="crispEdges">' + rects + '</svg>';
+  }
+
+  // The grassy strip along the bottom: a seamless tile repeated sideways
+  function groundTile() {
+    const cols = 64, rows = 12, u = 6;
+    let r = "";
+    for (let x = 0; x < cols; x++) {
+      const h = 6 + Math.round(2 * Math.sin(x / cols * Math.PI * 4) + Math.sin(x / cols * Math.PI * 10));
+      for (let y = rows - h; y < rows; y++) {
+        const color = y === rows - h ? "#5C684F" : ((x * 7 + y * 3) % 23 === 0 ? "#E9C2A9" : "#A0B49C");
+        r += '<rect x="' + x * u + '" y="' + y * u + '" width="' + u + '" height="' + u + '" fill="' + color + '"/>';
+      }
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + cols * u + '" height="' + rows * u + '" shape-rendering="crispEdges">' + r + '</svg>';
+  }
+  const groundUrl = 'url("data:image/svg+xml;utf8,' + encodeURIComponent(groundTile()) + '")';
+  document.querySelectorAll(".ground").forEach(g => { g.style.backgroundImage = groundUrl; });
+
+  (function decorateGate() {
+    const deco = document.getElementById("gate-deco");
+    const items = [
+      ["heart", 5, "left:7%;top:9%", "bob", null],
+      ["heart", 3, "right:11%;top:17%", "bob2", null],
+      ["heart", 3, "left:76%;top:42%", "bob", null],
+      ["sparkle", 4, "left:24%;top:24%", "bob2", "#F1EFE4"],
+      ["sparkle", 3, "right:30%;top:7%", "bob", "#F1EFE4"],
+      ["sparkle", 3, "left:12%;top:46%", "bob", "#F1EFE4"],
+      ["tree", 6, "left:2%;bottom:40px", "", null],
+      ["tree", 8, "right:3%;bottom:40px", "", null],
+      ["flower", 5, "left:21%;bottom:40px", "", null],
+      ["flower", 5, "right:25%;bottom:40px", "", null]
+    ];
+    items.forEach(([name, scale, pos, anim, color]) => {
+      const holder = document.createElement("span");
+      holder.style.cssText = "position:absolute;" + pos;
+      if (anim) holder.className = anim;
+      holder.innerHTML = sprite(name, scale, color);
+      holder.firstChild.style.position = "static";
+      deco.appendChild(holder);
+    });
+    const heart = document.getElementById("dash-heart");
+    heart.innerHTML = sprite("heart", 5, null);
+    heart.className = "dash-heart bob";
+  })();
 </script>
 </body>
 </html>
