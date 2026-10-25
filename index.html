@@ -94,6 +94,21 @@
   .media iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 12px; margin: 6px 0 14px; background: #e9edf3; display: block; }
   .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
   .btnrow .back { margin-top: 0; }
+
+  /* ---------- Convo Stimulus ---------- */
+  input[type="search"], input[type="text"] { width: 100%; padding: 12px 14px; font: inherit; border: 2px solid var(--line); border-radius: 12px; margin: 6px 0 16px; }
+  input[type="search"]:focus, input[type="text"]:focus { outline: 3px solid var(--sky); border-color: var(--ink); }
+  .topic { background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 16px 18px; margin: 0 0 12px; display: flex; gap: 14px; align-items: flex-start; }
+  .topic .num { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; background: var(--butter); border-radius: 10px; padding: 6px 10px; min-width: 56px; text-align: center; }
+  .topic h3 { margin: 0 0 4px; font-size: 1.1rem; }
+  .topic p { margin: 0 0 6px; line-height: 1.5; font-size: 1rem; }
+  .topic a { color: var(--ink); font-weight: 600; margin-right: 12px; }
+  .thumbs { display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0 12px; }
+  .thumb { position: relative; }
+  .thumb img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; display: block; }
+  .thumb button { position: absolute; top: -8px; right: -8px; padding: 0; width: 26px; height: 26px; border-radius: 50%; line-height: 1; }
+  label.back { display: inline-block; cursor: pointer; border-radius: 12px; padding: 12px 18px; font-weight: 600; margin-top: 4px; }
+  label.back:focus-within { outline: 3px solid var(--butter); outline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -148,7 +163,55 @@
 
   <button class="back" data-go="dashboard">Back to dashboard</button>
 </div></section>
-<section id="convo" class="screen"><div class="page"><h2>Convo Stimulus</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
+<!-- Convo Stimulus: explanation + two choices -->
+<section id="convo" class="screen"><div class="page wide">
+  <h2>Convo Stimulus</h2>
+  <p>Let me be honest: I’m not the best at keeping a chat interesting over text, and I don’t want our conversations to run dry. So I built this to give us something to talk about.</p>
+  <p>In one place, you can browse things I love or know a lot about, and pick whatever sounds fun. In the other, you can tell me what <em>you’re</em> into, so I can learn about it and be a better conversation partner.</p>
+  <div class="grid" style="margin-top:18px">
+    <button class="tile convo" data-go="convo-mine"><strong>Topics I’m into</strong><span>Things I like or know well.</span></button>
+    <button class="tile about" data-go="convo-hers"><strong>Topics you’d like me to learn</strong><span>Tell me what you’re into.</span></button>
+  </div>
+  <button class="back" data-go="dashboard">Back to dashboard</button>
+</div></section>
+
+<!-- Convo Stimulus: my topics -->
+<section id="convo-mine" class="screen read"><div class="page wide">
+  <h2>Topics I’m into</h2>
+  <p>See something you like? Message me its number (for example, <strong>007</strong>) and I’ll know you want to talk about it, or that you want me to explain it to you.</p>
+  <input type="search" id="topic-filter" placeholder="Search topics or numbers..." aria-label="Search topics">
+  <div id="topic-list"></div>
+  <p id="topic-empty" class="hidden">No topic matches that. Maybe it should be one of them? :)</p>
+  <div class="btnrow">
+    <button class="back" data-go="convo">Back</button>
+    <button class="back" data-go="dashboard">Dashboard</button>
+  </div>
+</div></section>
+
+<!-- Convo Stimulus: her topics -->
+<section id="convo-hers" class="screen read"><div class="page wide">
+  <h2>Topics you’d like me to learn</h2>
+  <div id="topic-form">
+    <p>Tell me what you like: a show, a hobby, a band, a random obsession. I’ll do my homework.</p>
+    <textarea id="topic-text" rows="5" placeholder="Type it here..."></textarea>
+    <label class="back" for="topic-images">Add pictures (optional, up to 3)
+      <input type="file" id="topic-images" accept="image/*" multiple class="hidden">
+    </label>
+    <div class="thumbs" id="topic-thumbs"></div>
+    <p class="privacy" id="topic-privacy" style="font-size:0.9rem"></p>
+    <button id="topic-submit" style="width:100%">Send</button>
+    <p id="topic-error" role="alert" style="color:#b3261e;min-height:1.4em"></p>
+  </div>
+  <div id="topic-result" class="hidden">
+    <div class="mood-msg" id="topic-message"></div>
+    <button class="back" id="topic-again">Tell me another one</button>
+  </div>
+  <div class="btnrow">
+    <button class="back" data-go="convo">Back</button>
+    <button class="back" data-go="dashboard">Dashboard</button>
+  </div>
+</div></section>
+
 <!-- About me: hub with three categories -->
 <section id="about" class="screen"><div class="page">
   <h2>About me</h2>
@@ -208,6 +271,7 @@
 <section id="kamusta" class="screen"><div class="page"><h2>Kamusta Ako</h2><p>Coming soon.</p><button class="back" data-go="dashboard">Back to dashboard</button></div></section>
 
 <script src="config.js"></script>
+<script src="topics.js"></script>
 <script>
   // Turns text into a scrambled code (SHA-256)
   async function hashText(text) {
@@ -478,6 +542,131 @@
       frame.title = "Photo or video";
       box.appendChild(frame);
     });
+  });
+
+  // ---------------- Convo Stimulus ----------------
+  // Shows my topics (from topics.js)
+  const topicList = document.getElementById("topic-list");
+  function renderTopics(filter) {
+    const q = (filter || "").trim().toLowerCase();
+    topicList.innerHTML = "";
+    let shown = 0;
+    TOPICS.forEach(t => {
+      const num = String(t.n).padStart(3, "0");
+      if (q && !(t.title + " " + t.desc + " " + num).toLowerCase().includes(q)) return;
+      shown++;
+      const card = document.createElement("div");
+      card.className = "topic";
+      const badge = document.createElement("div");
+      badge.className = "num";
+      badge.textContent = num;
+      const body = document.createElement("div");
+      const h = document.createElement("h3");  h.textContent = t.title;
+      const p = document.createElement("p");   p.textContent = t.desc;
+      body.append(h, p);
+      (t.links || []).forEach(l => {
+        const a = document.createElement("a");
+        a.href = l.url; a.target = "_blank"; a.rel = "noopener";
+        a.textContent = l.label + " ↗";
+        body.appendChild(a);
+      });
+      card.append(badge, body);
+      topicList.appendChild(card);
+    });
+    document.getElementById("topic-empty").classList.toggle("hidden", shown > 0);
+  }
+  renderTopics("");
+  document.getElementById("topic-filter").addEventListener("input", e => renderTopics(e.target.value));
+
+  // Her topic form: text + pictures, emailed to me
+  let pickedImages = [];
+  const TOPIC_THANKS = [
+    "Noted! I'm already getting my notes ready hahah.",
+    "Thank you for telling me. Expect me to know way too much about this next time hahah.",
+    "Challenge accepted, madame. Study mode: on.",
+    "You just gave me homework, and I'm happy about it :)",
+    "Saved! Now I have another reason to look forward to our next chat."
+  ];
+
+  // Shrinks a picture so it uploads quickly
+  function fileToJpeg(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, 1200 / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * k);
+        c.height = Math.round(img.height * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        const dataUrl = c.toDataURL("image/jpeg", 0.8);
+        resolve({ name: file.name.replace(/\.[^.]+$/, "") + ".jpg", mime: "image/jpeg", data: dataUrl.split(",")[1], preview: dataUrl });
+      };
+      img.onerror = () => reject(new Error("bad image"));
+      img.src = url;
+    });
+  }
+
+  function renderThumbs() {
+    const box = document.getElementById("topic-thumbs");
+    box.innerHTML = "";
+    pickedImages.forEach((im, i) => {
+      const wrap = document.createElement("div");
+      wrap.className = "thumb";
+      const img = document.createElement("img");
+      img.src = im.preview; img.alt = "Picture " + (i + 1);
+      const x = document.createElement("button");
+      x.textContent = "×"; x.setAttribute("aria-label", "Remove picture " + (i + 1));
+      x.addEventListener("click", () => { pickedImages.splice(i, 1); renderThumbs(); });
+      wrap.append(img, x);
+      box.appendChild(wrap);
+    });
+  }
+
+  document.getElementById("topic-images").addEventListener("change", async e => {
+    const error = document.getElementById("topic-error");
+    error.textContent = "";
+    for (const file of Array.from(e.target.files)) {
+      if (pickedImages.length >= 3) { error.textContent = "Three pictures at most, please."; break; }
+      try { pickedImages.push(await fileToJpeg(file)); }
+      catch (err) { error.textContent = "I couldn't read one of those pictures. Try a different one?"; }
+    }
+    e.target.value = "";
+    renderThumbs();
+  });
+
+  document.getElementById("topic-submit").addEventListener("click", async () => {
+    const button = document.getElementById("topic-submit");
+    const error = document.getElementById("topic-error");
+    const text = document.getElementById("topic-text").value.trim();
+    if (!text && pickedImages.length === 0) { error.textContent = "Write something or add a picture first :)"; return; }
+    button.disabled = true; button.textContent = "Sending..."; error.textContent = "";
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ type: "topic", text: text, images: pickedImages.map(i => ({ name: i.name, mime: i.mime, data: i.data })) })
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      document.getElementById("topic-form").classList.add("hidden");
+      document.getElementById("topic-result").classList.remove("hidden");
+      document.getElementById("topic-message").textContent = TOPIC_THANKS[Math.floor(Math.random() * TOPIC_THANKS.length)];
+      document.getElementById("topic-text").value = "";
+      pickedImages = []; renderThumbs();
+    } catch (err) {
+      error.textContent = "That didn't send. Check your internet and try again.";
+    }
+    button.disabled = false; button.textContent = "Send";
+  });
+
+  document.getElementById("topic-again").addEventListener("click", () => {
+    document.getElementById("topic-form").classList.remove("hidden");
+    document.getElementById("topic-result").classList.add("hidden");
+  });
+  document.querySelector('[data-go="convo-hers"]').addEventListener("click", () => {
+    document.getElementById("topic-privacy").textContent = "This goes straight to " + YOUR_NAME + ".";
   });
 </script>
 </body>
